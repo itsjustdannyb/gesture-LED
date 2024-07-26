@@ -57,7 +57,7 @@ def image_capture():
 
             if (recent_captured - last_captured >= capture_freq and count <= image_count):
                 # save image
-                cv2.imwrite(f"{class_name}_{count + 1}.png", flip_frame)
+                cv2.imwrite(f"{count}.png", flip_frame)
                 last_captured = recent_captured
                 count += 1
 
