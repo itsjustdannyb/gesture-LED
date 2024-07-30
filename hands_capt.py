@@ -1,39 +1,92 @@
-import mediapipe as mp 
-import cv2 as cv2
+import cv2
+import os
+import time
 
-mp_drawing = mp.solutions.drawing_utils # to render landmarks
-mp_hands = mp.solutions.hands
+# creates folder for image class i
+# the app opens up
+# saves a frame every 2 seconds, it'll save a total of 100 
+# it'll countdown from 1 - 10 when it's time to take shots for class i + 1
+# after number of classes is complete. it'll destroy the app
 
-cap = cv2.VideoCapture(0)
+def main():
+    image_capture()
+   
 
-with mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence=0.5, max_num_hands=4) as hands:
 
+def image_capture():
+    # make sure you're in the folder you want to store the images
+    main_cwd = os.getcwd()
+    os.chdir(main_cwd) #change directory to current working directory
+
+    # collect user input for what to name folder
+    folder_name = input("folder name: ")
+    # collect number of classes from user
+    num_classes = int(input("How many classes are there? "))
+    image_count = int(input("How many Images per class: "))
+
+
+    os.mkdir(folder_name)
+    folder_path = os.path.join(main_cwd,folder_name)
+    os.chdir(folder_path)
+
+    
+
+    for i in range(num_classes):
+        class_name = input(f"Name class {i}: ") # class i in range num_class
+        os.mkdir(class_name) # make class folder
+        os.chdir(os.path.join(folder_path, class_name)) #change to current class directory
+
+        print(f"Starting Class {i + 1}...")
+        for countdown in range(5, 0 , -1):
+            print(countdown)
+            time.sleep(1)
+
+        # start up camera
+        capture = cv2.VideoCapture(0)
+        last_captured = time.time()
+        capture_freq = 1.5
+        count = 0
+
+        
         while True:
+            ret, frame = capture.read()
+            flip_frame = cv2.flip(frame, 1)
 
-            ret, frame = cap.read()
+            recent_captured = time.time()
+            cv2.imshow("Video", flip_frame)
 
-            flip_img = cv2.flip(frame, 1)
+            if (recent_captured - last_captured >= capture_freq and count <= image_count):
+                # save image
+                cv2.imwrite(f"{count}.png", flip_frame)
+                last_captured = recent_captured
+                count += 1
 
-            # convert image to RGB
-            image = cv2.cvtColor(flip_img, cv2.COLOR_BGR2RGB)
-            image.flags.writeable = False # to avoid altering
-
-            results = hands.process(image)
-
-            # convert image back to BGR
-            image.flags.writeable = True
-            image = cv2.cvtColor(flip_img, cv2.COLOR_RGB2BGR)
-
-            # render results
-            if results.multi_hand_landmarks:
-                for hand in (results.multi_hand_landmarks):
-                    mp_drawing.draw_landmarks(flip_img, hand, mp_hands.HAND_CONNECTIONS)
-
-            cv2.putText(flip_img, "bams", (0, 75), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 250), 4)            
-            cv2.imshow("Video", flip_img)
-
-            if  cv2.waitKey(1) == ord("q"):
+            # to quit
+            if cv2.waitKey(1) == ord("q") or count == image_count:
                 break
+                count = 0
+                
 
-cap.release()
-cv2.destroyAllWindows()
+
+        print(f"Stopping Class {i + 1}...")
+        for countdown in range(5, 0, -1):
+            print(countdown)
+            time.sleep(1)
+
+        capture.release()
+        cv2.destroyAllWindows()  
+
+        time.sleep(3)
+
+        # go to root directory
+        os.chdir(folder_path)
+
+             
+
+    
+    
+    
+
+if __name__ == "__main__":
+    main()
+
