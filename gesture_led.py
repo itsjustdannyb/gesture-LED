@@ -8,6 +8,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# accessing arduino
+from pyfirmata2 import Arduino
+board = Arduino("COM9")
+
 # hand detection model
 from model_arch import Net
 
@@ -81,6 +85,11 @@ while True:
                 prediction = model(data)
                 prediction = prediction.numpy() # CONVERT TENSOR TO NUMPY
                 # print(prediction)
+                if prediction[0] < 0.5:
+                    board.digital[13].write(1)
+                else:
+                    board.digital[13].write(0)
+
                 prediction = classes[(prediction[0] > 0.5)]
                 print(prediction)
 
